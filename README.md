@@ -1,4 +1,4 @@
-# python-examples
+# dqrobotics-python-examples
 Examples for dqrobotics-python
 
 ## Running examples
