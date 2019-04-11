@@ -102,5 +102,21 @@ for i in range(0,RUN_COUNT):
 end = time.time()
 print("DQ_kinematics.plane_jacobian       [average s]",(((end-start))/RUN_COUNT))
 
+# DQ_kinematics.pseudo_inverse()
+start = time.time()
+for i in range(0,RUN_COUNT):
+  J     = np.random.rand(8,7)
+  J_inv = pseudo_inverse(J);
+end = time.time()
+print("pseudo_inverse                     [average s]",(((end-start))/RUN_COUNT))
+
+# numpy.linalg.pinv()
+start = time.time()
+for i in range(0,RUN_COUNT):
+  J     = np.random.rand(8,7)
+  J_inv = np.linalg.pinv(J);
+end = time.time()
+print("numpy.linalg.pinv                  [average s]",(((end-start))/RUN_COUNT))
+
 print("***********************************************")
 
