@@ -21,14 +21,14 @@ start = time.time()
 for i in range(0,RUN_COUNT):
   dq_vec = np.random.rand(8,1)
 end = time.time()
-print("np.random.rand(8,1)                [average s]",(((end-start))/RUN_COUNT))
+print("np.random.rand(8,1)                 [average s]",(((end-start))/RUN_COUNT))
 
 # Dual quaternion from random vector creation
 start = time.time()
 for i in range(0,RUN_COUNT):
   a = DQ(np.random.rand(8,1))
 end = time.time()
-print("DQ()                               [average s]",(((end-start))/RUN_COUNT))
+print("DQ()                                [average s]",(((end-start))/RUN_COUNT))
 
 # Dual quaternion sum
 start = time.time()
@@ -37,7 +37,7 @@ for i in range(0,RUN_COUNT):
   b = DQ(np.random.rand(8,1))
   c = a+b
 end = time.time()
-print("DQ+DQ                              [average s]",(((end-start))/RUN_COUNT))
+print("DQ+DQ                               [average s]",(((end-start))/RUN_COUNT))
 
 # Dual quaternion product
 start = time.time()
@@ -46,7 +46,7 @@ for i in range(0,RUN_COUNT):
   b = DQ(np.random.rand(8,1))
   c = a*b
 end = time.time()
-print("DQ*DQ                              [average s]",(((end-start))/RUN_COUNT))
+print("DQ*DQ                               [average s]",(((end-start))/RUN_COUNT))
 
 # DQ_kinematics.fkm
 start = time.time()
@@ -54,7 +54,7 @@ for i in range(0,RUN_COUNT):
   theta = np.random.rand(7,1)
   x     = robot.fkm(theta)
 end = time.time()
-print("DQ_SerialManipulator.fkm           [average s]",(((end-start))/RUN_COUNT))
+print("DQ_SerialManipulator.fkm            [average s]",(((end-start))/RUN_COUNT))
 
 # DQ_kinematics.pose_jacobian
 start = time.time()
@@ -62,7 +62,7 @@ for i in range(0,RUN_COUNT):
   theta = np.random.rand(7,1)
   Jx    = robot.pose_jacobian(theta)
 end = time.time()
-print("DQ_SerialManipulator.pose_jacobian [average s]",(((end-start))/RUN_COUNT))
+print("DQ_SerialManipulator.pose_jacobian  [average s]",(((end-start))/RUN_COUNT))
 
 # DQ_kinematics.rotation_jacobian
 start = time.time()
