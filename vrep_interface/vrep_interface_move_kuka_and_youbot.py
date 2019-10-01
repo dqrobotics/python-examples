@@ -202,7 +202,7 @@ try:
         lbr4p_vreprobot.send_q_to_vrep(lbr4p_q)
         youbot_vreprobot.send_q_to_vrep(youbot_q)
 
-        time.sleep(0.01)
+        time.sleep(sampling_time)
     print("Control finished...")
 
     # Stops simulation in V-REP
