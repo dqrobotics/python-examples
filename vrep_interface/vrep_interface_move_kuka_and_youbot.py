@@ -2,17 +2,17 @@ import time
 import numpy as np
 from math import pi, sin, cos
 import quadprog
+
 from dqrobotics import *
 from dqrobotics.utils import DQ_Geometry
-from dqrobotics.interfaces.vrep.robots import LBR4pVrepRobot, YouBotVrepRobot
-from dqrobotics.interfaces.vrep import DQ_VrepInterface
 from dqrobotics.robot_control import DQ_TaskSpacePseudoInverseController, DQ_ClassicQPController, ControlObjective
 from dqrobotics.solvers import DQ_QuadraticProgrammingSolver
+from dqrobotics.interfaces.vrep import DQ_VrepInterface
+from dqrobotics.interfaces.vrep.robots import LBR4pVrepRobot, YouBotVrepRobot
 
 
 def get_plane_from_vrep(vrep_interface, plane_name, normal):
-    plane_object_pose = vrep_interface.get_object_pose(plane_name, "VREP_OBJECTNAME_ABSOLUTE",
-                                                       DQ_VrepInterface.OP_AUTOMATIC)
+    plane_object_pose = vrep_interface.get_object_pose(plane_name)
     p = translation(plane_object_pose)
     r = rotation(plane_object_pose)
     n = Ad(r, normal)
@@ -21,8 +21,7 @@ def get_plane_from_vrep(vrep_interface, plane_name, normal):
 
 
 def get_line_from_vrep(vrep_interface, line_name, direction):
-    line_object_pose = vrep_interface.get_object_pose(line_name, "VREP_OBJECTNAME_ABSOLUTE",
-                                                      DQ_VrepInterface.OP_AUTOMATIC)
+    line_object_pose = vrep_interface.get_object_pose(line_name)
     p = translation(line_object_pose)
     r = rotation(line_object_pose)
     l: DQ = Ad(r, direction)
@@ -53,13 +52,17 @@ def compute_reference(simulation_parameters_inner, x0, t_inner):
     return xd, xd_dot
 
 
-def compute_constraints(youbot_base_pose_inner, youbot_Jx, plane_inner, cylinder1_inner, cylinder2_inner):
+def compute_constraints(youbot, plane_inner, cylinder1_inner, cylinder2_inner):
     robot_radius = 0.35
     radius_cylinder1 = 0.1
     radius_cylinder2 = 0.1
 
-    t_inner = translation(youbot_base_pose_inner)
-    base_jt = youbot.translation_jacobian(youbot_Jx, youbot_base_pose_inner)
+    youbot_base = youbot.get_chain_as_holonomic_base(0)
+    youbot_base_pose = youbot_base.raw_fkm(youbot_q)
+    youbot__base_Jx = youbot_base.raw_pose_jacobian(youbot_q, 2)
+
+    t_inner = translation(youbot_base_pose)
+    base_jt = youbot.translation_jacobian(youbot__base_Jx, youbot_base_pose)
     Jt = np.concatenate((base_jt, np.zeros((4, 5))), axis=1)
 
     j_dist_plane = youbot.point_to_plane_distance_jacobian(Jt, t_inner, plane_inner)
@@ -187,10 +190,7 @@ try:
         lbr4p_u = lbr4p_controller.compute_tracking_control_signal(lbr4p_q, vec8(lbr4p_xd), vec8(lbr4p_ff))
 
         # Computer control signal for the youbot
-        youbot_base = youbot.get_chain(0)
-        youbot_base_pose = youbot_base.raw_fkm(youbot_q)
-        youbot__base_Jx = youbot_base.raw_pose_jacobian(youbot_q, 2)
-        (Jconstraint, bconstraint) = compute_constraints(youbot_base_pose, youbot__base_Jx, plane, cylinder1, cylinder2)
+        (Jconstraint, bconstraint) = compute_constraints(youbot, plane, cylinder1, cylinder2)
         youbot_controller.set_inequality_constraint(-Jconstraint, 1*bconstraint)
         youbot_u = youbot_controller.compute_tracking_control_signal(youbot_q, vec8(youbot_xd), vec8(youbot_ff))
 
