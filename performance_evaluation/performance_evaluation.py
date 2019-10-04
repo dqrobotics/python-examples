@@ -4,7 +4,7 @@ from dqrobotics.robot_modeling import DQ_Kinematics
 import time
 import numpy as np
 
-RUN_COUNT = 10000;
+RUN_COUNT = 1000000;
 
 robot = KukaLw4Robot.kinematics()
 
@@ -27,8 +27,9 @@ print("np.random.rand(8,1)                 [average s]",(((end-start))/RUN_COUNT
 start = time.time()
 for i in range(0,RUN_COUNT):
   a = DQ(np.random.rand(8,1))
+  b = DQ(np.random.rand(8,1))
 end = time.time()
-print("DQ()                                [average s]",(((end-start))/RUN_COUNT))
+print("DQ(np.random.rand(8,1))             [average s]",(((end-start))/RUN_COUNT))
 
 # Dual quaternion sum
 start = time.time()

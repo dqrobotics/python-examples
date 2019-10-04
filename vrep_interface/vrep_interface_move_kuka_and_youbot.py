@@ -24,7 +24,7 @@ def get_line_from_vrep(vrep_interface, line_name, direction):
     line_object_pose = vrep_interface.get_object_pose(line_name)
     p = translation(line_object_pose)
     r = rotation(line_object_pose)
-    l: DQ = Ad(r, direction)
+    l = Ad(r, direction)
     m = cross(p, l)
     return l + E_ * m
 
