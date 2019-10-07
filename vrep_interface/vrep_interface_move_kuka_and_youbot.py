@@ -6,7 +6,7 @@ import quadprog
 from dqrobotics import *
 from dqrobotics.utils import DQ_Geometry
 from dqrobotics.robot_control import DQ_TaskSpacePseudoInverseController, DQ_ClassicQPController, ControlObjective
-from dqrobotics.solvers import DQ_QuadraticProgrammingSolver
+from dqrobotics.solvers import DQ_QuadraticProgrammingSolver, DQ_QuadprogSolver
 from dqrobotics.interfaces.vrep import DQ_VrepInterface
 from dqrobotics.interfaces.vrep.robots import LBR4pVrepRobot, YouBotVrepRobot
 
@@ -87,25 +87,6 @@ class SimulationParameters():
         self.wn = wn
         self.total_time = total_time
         self.dispz = dispz
-
-
-class DQ_QuadprogSolver(DQ_QuadraticProgrammingSolver):
-    def __init__(self):
-        DQ_QuadraticProgrammingSolver.__init__(self)
-        pass
-
-    def solve_quadratic_program(self, H, f, A, b, Aeq, beq):
-        # Ignoring Aeq and beq because quadprog doesn't handle them directly
-
-        # Saving shape to remove the singleton dimension
-        (s1, s2) = np.shape(f)
-        (s3, s4) = np.shape(b)
-
-        (x, f, xu, iterations, lagrangian, iact) = quadprog.solve_qp(G=2*H,
-                                                                     a=-np.reshape(f, s1),
-                                                                     C=-np.transpose(A),
-                                                                     b=-np.reshape(b, s3))
-        return x
 
 # Creates a VrepInterface object
 vi = DQ_VrepInterface()
