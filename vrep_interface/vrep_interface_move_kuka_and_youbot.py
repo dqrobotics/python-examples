@@ -29,7 +29,7 @@ def get_line_from_vrep(vrep_interface, line_name, direction):
     return l + E_ * m
 
 
-def compute_reference(simulation_parameters_inner, x0, t_inner):
+def compute_lbr4p_reference(simulation_parameters_inner, x0, t_inner):
     dispz = simulation_parameters_inner.dispz
     wd = simulation_parameters_inner.wd
     wn = simulation_parameters_inner.wn
@@ -49,7 +49,33 @@ def compute_reference(simulation_parameters_inner, x0, t_inner):
     pdot = -E_ * 0.5 * dispz * wd * sin(wd * t_inner) * k_
     xd_dot = rdot * x0 * p + r * x0 * pdot
 
+    xd = lbr4p.reference_frame() * xd
+    xd_dot = lbr4p.reference_frame() * xd_dot
+
     return xd, xd_dot
+
+
+def compute_youbot_reference(simulation_parameters, controller, lbr4p_xd, lbr4p_ff):
+    circle_radius = 0.1
+    tcircle = 1 + E_ * 0.5 * circle_radius * j_
+
+    # Youbot trajectory
+    # Those are the trajectory components to track the whiteboard
+    youbot_xd = lbr4p_xd * (1 + 0.5 * E_ * 0.015 * k_) * j_
+    youbot_ff = lbr4p_ff * (1 + 0.5 * E_ * 0.015 * k_) * j_
+    # Now we modify the trajectory in order to draw a circle, but we do it
+    # only if the whiteboard pen tip is on the whiteboard surface.
+    if simulation_parameters.first_iteration:
+        simulation_parameters.first_iteration = False
+        simulation_parameters.tc = 0
+        simulation_parameters.rcircle = DQ([1])
+    elif np.linalg.norm(controller.get_last_error_signal()) < 0.002:
+        simulation_parameters.tc = simulation_parameters.tc + 0.1  # Increment around 0.5 deg.
+        simulation_parameters.rcircle = cos(simulation_parameters.tc / 2.0) + k_ * sin(simulation_parameters.tc / 2.0)
+    youbot_xd = youbot_xd * simulation_parameters.rcircle * tcircle
+    youbot_ff = youbot_ff * simulation_parameters.rcircle * tcircle
+
+    return youbot_xd, youbot_ff
 
 
 def compute_constraints(youbot, plane_inner, cylinder1_inner, cylinder2_inner):
@@ -69,10 +95,12 @@ def compute_constraints(youbot, plane_inner, cylinder1_inner, cylinder2_inner):
     dist_plane = DQ_Geometry.point_to_plane_distance(t_inner, plane_inner) - robot_radius
 
     j_dist_cylinder_1 = youbot.point_to_line_distance_jacobian(Jt, t_inner, cylinder1_inner)
-    dist_cylinder1 = DQ_Geometry.point_to_line_squared_distance(t_inner, cylinder1_inner) - (radius_cylinder1 + robot_radius) ** 2
+    dist_cylinder1 = DQ_Geometry.point_to_line_squared_distance(t_inner, cylinder1_inner) - (
+                radius_cylinder1 + robot_radius) ** 2
 
     j_dist_cylinder_2 = youbot.point_to_line_distance_jacobian(Jt, t_inner, cylinder2_inner)
-    dist_cylinder2 = DQ_Geometry.point_to_line_squared_distance(t_inner, cylinder2_inner) - (radius_cylinder2 + robot_radius) ** 2
+    dist_cylinder2 = DQ_Geometry.point_to_line_squared_distance(t_inner, cylinder2_inner) - (
+                radius_cylinder2 + robot_radius) ** 2
 
     j_constraint = np.concatenate((j_dist_plane, j_dist_cylinder_1, j_dist_cylinder_2), axis=0)
     b_constraint = np.array([dist_plane, dist_cylinder1, dist_cylinder2])
@@ -81,12 +109,16 @@ def compute_constraints(youbot, plane_inner, cylinder1_inner, cylinder2_inner):
 
 
 class SimulationParameters():
-    def __init__(self, move_manipulator, wd, wn, total_time, dispz):
+    def __init__(self, move_manipulator, first_iteration, wd, wn, total_time, dispz, tc, rcircle):
         self.move_manipulator = move_manipulator
+        self.first_iteration = first_iteration
         self.wd = wd
         self.wn = wn
         self.total_time = total_time
         self.dispz = dispz
+        self.tc = tc
+        self.rcircle = rcircle
+
 
 # Creates a VrepInterface object
 vi = DQ_VrepInterface()
@@ -99,6 +131,9 @@ try:
         raise Exception("Unable to connect to vrep!")
 
     simulation_parameters = SimulationParameters(
+        first_iteration=True,
+        tc=0.0,
+        rcircle=DQ([1]),
         move_manipulator=True,
         wd=0.5,
         wn=0.1,
@@ -120,19 +155,15 @@ try:
     # Initialize controllers
     lbr4p_controller = DQ_TaskSpacePseudoInverseController(lbr4p)
     lbr4p_controller.set_control_objective(ControlObjective.Pose)
-    lbr4p_controller.set_gain(5)
-    lbr4p_controller.set_damping(0.0)
+    lbr4p_controller.set_gain(10.0)
 
     qp_solver = DQ_QuadprogSolver()
     youbot_controller = DQ_ClassicQPController(youbot, qp_solver)
     youbot_controller.set_control_objective(ControlObjective.Pose)
-    youbot_controller.set_gain(5)
+    youbot_controller.set_gain(10.0)
     youbot_controller.set_damping(0.01)
 
-    sampling_time = 0.1
-    tc = 0.0
-    tcircle = 1 + E_ * 0.5 * 0.1 * j_
-    rcircle = DQ(np.array([1.0]))
+    sampling_time = 0.05
 
     # Get initial robot information
     lbr4p_q = np.array([0.0, 1.7453e-01, 0.0, 1.5708, 0.0, 2.6273e-01, 0.0])
@@ -148,36 +179,22 @@ try:
         cylinder1 = get_line_from_vrep(vi, "ObstacleCylinder1", k_)
         cylinder2 = get_line_from_vrep(vi, "ObstacleCylinder2", k_)
 
-        # Set LBR4p reference
-        (lbr4p_xd_wrt_base, lbr4p_ff_wrt_base) = compute_reference(simulation_parameters, lbr4p_x0, t)
-        lbr4p_xd = lbr4p.reference_frame() * lbr4p_xd_wrt_base
-        lbr4p_ff = lbr4p.reference_frame() * lbr4p_ff_wrt_base
+        # Set reference for the manipulator and the mobile manipulator
+        (lbr4p_xd, lbr4p_ff) = compute_lbr4p_reference(simulation_parameters, lbr4p_x0, t)
 
-        # YouBot Trajectory
-        youbot_xd = lbr4p_xd * (1 + 0.5 * E_ * 0.015 * k_) * j_
-        youbot_ff = lbr4p_ff * (1 + 0.5 * E_ * 0.015 * k_) * j_
-
-        # Modify the trajectory in order to draw a circle
-        if first_iteration:
-            first_iteration = False
-        elif np.linalg.norm(youbot_controller.get_last_error_signal()) < 0.025:
-            tc = tc + 0.01
-            rcircle = cos(tc / 2) + k_ * sin(tc / 2)
-
-        youbot_xd = youbot_xd * rcircle * tcircle
-        youbot_ff = youbot_ff * rcircle * tcircle
+        (youbot_xd, youbot_ff) = compute_youbot_reference(simulation_parameters, youbot_controller, lbr4p_xd, lbr4p_ff)
 
         # Compute control signal for the arm
         lbr4p_u = lbr4p_controller.compute_tracking_control_signal(lbr4p_q, vec8(lbr4p_xd), vec8(lbr4p_ff))
 
         # Computer control signal for the youbot
         (Jconstraint, bconstraint) = compute_constraints(youbot, plane, cylinder1, cylinder2)
-        youbot_controller.set_inequality_constraint(-Jconstraint, 1*bconstraint)
+        youbot_controller.set_inequality_constraint(-Jconstraint, 1 * bconstraint)
         youbot_u = youbot_controller.compute_tracking_control_signal(youbot_q, vec8(youbot_xd), vec8(youbot_ff))
 
         # Desired joint values
-        lbr4p_q = lbr4p_q + lbr4p_u*sampling_time
-        youbot_q = youbot_q + youbot_u*sampling_time
+        lbr4p_q = lbr4p_q + lbr4p_u * sampling_time
+        youbot_q = youbot_q + youbot_u * sampling_time
 
         # Send desired values
         lbr4p_vreprobot.send_q_to_vrep(lbr4p_q)
