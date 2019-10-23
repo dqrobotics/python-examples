@@ -49,8 +49,8 @@ def compute_lbr4p_reference(simulation_parameters_inner, x0, t_inner):
     pdot = -E_ * 0.5 * dispz * wd * sin(wd * t_inner) * k_
     xd_dot = rdot * x0 * p + r * x0 * pdot
 
-    xd = lbr4p.reference_frame() * xd
-    xd_dot = lbr4p.reference_frame() * xd_dot
+    xd = lbr4p.get_reference_frame() * xd
+    xd_dot = lbr4p.get_reference_frame() * xd_dot
 
     return xd, xd_dot
 
@@ -168,7 +168,7 @@ try:
     # Get initial robot information
     lbr4p_q = np.array([0.0, 1.7453e-01, 0.0, 1.5708, 0.0, 2.6273e-01, 0.0])
     lbr4p_vreprobot.send_q_to_vrep(lbr4p_q)
-    lbr4p_x0 = conj(lbr4p.reference_frame()) * lbr4p.fkm(lbr4p_q)
+    lbr4p_x0 = conj(lbr4p.get_reference_frame()) * lbr4p.fkm(lbr4p_q)
     youbot_q = youbot_vreprobot.get_q_from_vrep()
 
     print("Starting control loop...")
