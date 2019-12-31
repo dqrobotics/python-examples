@@ -1,7 +1,8 @@
 from dqrobotics import *
-from dqrobotics.interfaces       import VrepInterface
+from dqrobotics.interfaces.vrep  import DQ_VrepInterface
 from dqrobotics.robots           import KukaLw4Robot
-from dqrobotics.utils.DQ_LinearAlgebra import *
+from dqrobotics.utils import *
+pinv = DQ_LinearAlgebra.pinv
 import math
 import time
 import numpy as np
@@ -15,7 +16,7 @@ print('###############################################################')
 
 
 ## Creates a VrepInterface object
-vi = VrepInterface()
+vi = DQ_VrepInterface()
 
 ## Always use a try-catch in case the connection with V-REP is lost
 ## otherwise your clientid will be locked for future use 
@@ -26,31 +27,29 @@ try:
     ## Starts simulation in V-REP
     print("Starting V-REP simulation...")
     vi.start_simulation()
-    
+
     ## Store joint names
     joint_names = ("LBR_iiwa_14_R820_joint1","LBR_iiwa_14_R820_joint2","LBR_iiwa_14_R820_joint3","LBR_iiwa_14_R820_joint4","LBR_iiwa_14_R820_joint5","LBR_iiwa_14_R820_joint6","LBR_iiwa_14_R820_joint7")
-    ## Get joint handles
-    joint_handles = vi.get_object_handles(joint_names)
-    
+
     ## Defining robot kinematic model
     robot = KukaLw4Robot.kinematics()
     xd    = robot.fkm((0,math.pi/2,0,math.pi/2,0,math.pi/2,0))
-    
+
     ## Defining target joints
-    theta        = vi.get_joint_positions(joint_handles,VrepInterface.OP_STREAMING)
+    theta = vi.get_joint_positions(joint_names)
     
     ## Define error as something big
     e = 1
     print("Starting control loop...")
     while np.linalg.norm(e)>0.01:
-        theta = vi.get_joint_positions(joint_handles,VrepInterface.OP_BUFFER)
+        theta = vi.get_joint_positions(joint_names)
         x     = robot.fkm(theta)
         e     = vec8(x-xd)
         J     = robot.pose_jacobian(theta)
         
         u     = -0.01*np.matmul(pinv(J),e);
         theta = theta+u
-        vi.set_joint_target_positions(joint_handles,theta,VrepInterface.OP_ONESHOT)
+        vi.set_joint_target_positions(joint_names,theta)
         time.sleep(0.01)
     print("Control finished...")
         
