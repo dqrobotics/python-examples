@@ -144,8 +144,8 @@ try:
             inertia_list[j*3:(3+j*3), k*3:(3+k*3)] = I_DH_frame
 
             #compute the center of mass of each link expressed in the absolute frame.
-            com0 = vi.get_center_of_mass(link, DQ_VrepInterface.ABSOLUTE_FRAME)
-            xcom0 = 1 + E_ * 0.5 * DQ([0, com0[0], com0[1], com0[2]])
+            pcom0 = vi.get_center_of_mass(link, DQ_VrepInterface.ABSOLUTE_FRAME)
+            xcom0 = 1 + E_ * 0.5 * pcom0
 
             #We compute the constant rigid transformation of the center of mass with respect to the DH frames.
             vecxc = vec3(translation(xi.conj() * xcom0))
