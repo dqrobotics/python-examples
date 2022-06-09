@@ -33,7 +33,7 @@ your input is a line segment?".format(threshold))
     return line, p1, p2
 
 
-def show_line_segments_on_coppeliasim(vi, verbose=False, threshold_for_is_line_segment=DQ_threshold * 10e7):
+def show_line_segments_on_coppeliasim(vi, verbose=False, threshold_for_is_line_segment=DQ_threshold * 10e8):
     x1 = vi.get_object_pose("line1")
     t1 = translation(x1)
     r1 = rotation(x1)
@@ -95,7 +95,7 @@ def show_line_segments_on_coppeliasim(vi, verbose=False, threshold_for_is_line_s
         ))
 
 
-if __name__ == "main":
+if __name__ == "__main__":
     vi = DQ_VrepInterface()
     try:
         vi.connect(19997, 100, 100)
@@ -106,6 +106,7 @@ if __name__ == "main":
               + " on CoppeliaSim and the closest points will be shown.")
 
         while True:
+            show_line_segments_on_coppeliasim(vi)
             vi.trigger_next_simulation_step()
 
     except Exception as e:
