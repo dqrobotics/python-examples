@@ -1,3 +1,19 @@
+"""
+line_segment_to_line_segment_vfi_example
+Usage:
+1. Open the "line_segment_to_line_segment_vfi_scene.ttt" using CoppeliaSim
+2. Run this script
+3. Move the object "xd1" inside CoppeliaSim. The robot will move while preventing collisions
+between both line segments.
+
+This was implemented using the strategy defined in the paper below. It is an improved implementation
+of the strategy described in Section VI of the paper below.
+
+M. M. Marinho, B. V. Adorno, K. Harada and M. Mitsuishi,
+"Dynamic Active Constraints for Surgical Robots Using Vector-Field Inequalities,"
+in IEEE Transactions on Robotics, vol. 35, no. 5, pp. 1166-1185, Oct. 2019, doi: 10.1109/TRO.2019.2920078.
+"""
+
 from dqrobotics import *
 from dqrobotics.robot_modeling import DQ_Kinematics
 from dqrobotics.utils import DQ_Geometry
@@ -30,6 +46,8 @@ try:
     vi.connect(19997, 100, 100)
     vi.set_synchronous(True)
     vi.start_simulation()
+
+    print("Connection ready! Move 'xd1' on CoppeliaSim.")
 
     # Initialize robots
     vrep_robot_0 = LBR4pVrepRobot("LBR4p#0", vi)
