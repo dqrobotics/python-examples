@@ -33,7 +33,13 @@ your input is a line segment?".format(threshold))
     return line, p1, p2
 
 
-def show_line_segments_on_coppeliasim(vi, verbose=False, threshold_for_is_line_segment=DQ_threshold * 10e8):
+def func(point, line):
+    l = P(line)
+    m = D(line)
+    return point + cross(l, m) - cross(l, cross(point, l))
+
+
+def show_line_segments_on_coppeliasim(vi, verbose=False, threshold_for_is_line_segment=DQ_threshold * 10e12):
     x1 = vi.get_object_pose("line1")
     t1 = translation(x1)
     r1 = rotation(x1)
@@ -72,6 +78,19 @@ def show_line_segments_on_coppeliasim(vi, verbose=False, threshold_for_is_line_s
 
     vi.set_object_translation("closest_point_line_1", cp_line_1)
     vi.set_object_translation("closest_point_line_2", cp_line_2)
+
+    vi.set_object_translation("point_1_projected_in_line_1",
+                              DQ_Geometry.point_projected_in_line(line2_p1, line1)
+                              )
+    vi.set_object_translation("point_2_projected_in_line_1",
+                              DQ_Geometry.point_projected_in_line(line2_p2, line1)
+                              )
+    vi.set_object_translation("point_1_projected_in_line_2",
+                              DQ_Geometry.point_projected_in_line(line1_p1, line2)
+                              )
+    vi.set_object_translation("point_2_projected_in_line_2",
+                              DQ_Geometry.point_projected_in_line(line1_p2, line2)
+                              )
 
     cp_lineseg_1, cp_lineseg_2 = DQ_Geometry.closest_points_between_line_segments(
         line1,
