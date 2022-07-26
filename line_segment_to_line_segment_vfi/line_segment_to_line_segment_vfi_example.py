@@ -29,7 +29,7 @@ import numpy as np
 configuration = {
     "T": 0.001,  # Sampling time
     "d_safe": 0.01,  # Safe distance between shafts
-    "vfi_gain": 10  # VFI gain, the larger the faster the approach towards obstacles
+    "vfi_gain": 100  # VFI gain, the larger the faster the approach towards obstacles
 }
 
 
@@ -120,7 +120,7 @@ try:
             robot_0_t,
             robot_0_p2_t,
             robot_1_line,
-            robot_1_p2_t,
+            robot_1_t,
             robot_1_p2_t
         )
 
@@ -129,7 +129,7 @@ try:
             robot_0_t,
             robot_0_p2_t,
             robot_1_line,
-            robot_1_p2_t,
+            robot_1_t,
             robot_1_p2_t
         )
 
