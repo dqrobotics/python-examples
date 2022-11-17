@@ -88,15 +88,15 @@ try:
     safe_angle = 15*(pi/180)
     T = 0.005
     w = 0.2
-    Alpha = 20*(pi/180)
+    alpha = 20*(pi/180)
     t = 0
 
     #for i in range(iterations):
     for t in np.arange(0.0, iterations*T, T):
         #t = i*T
 
-        phi_t = Alpha*sin(w*t)
-        phi_t_dot = Alpha * w * cos(w * t)
+        phi_t = alpha*sin(w*t)
+        phi_t_dot = alpha * w * cos(w * t)
         r_dyn = cos(phi_t / 2) + i_ * sin(phi_t / 2)
         r_dyn_dot = (-sin(phi_t / 2) + i_ * cos(phi_t / 2)) * (phi_t_dot / 2)
 
