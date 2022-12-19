@@ -16,7 +16,7 @@ Contributors:
 Instructions:
 Prerequisites:
 - dqrobotics
-- dqrobotics-vrep-interface
+- dqrobotics-interface-vrep
 - quadprog
 
 1) Open the CoppeliaSim scene test_dynamic_conic_constraint.ttt
@@ -28,6 +28,7 @@ from dqrobotics.interfaces.vrep  import DQ_VrepInterface
 from dqrobotics.robot_control import ControlObjective
 from dqrobotics.robot_control import DQ_ClassicQPController
 from dqrobotics.robot_modeling import DQ_Kinematics, DQ_SerialManipulatorMDH
+from dqrobotics.robots import FrankaEmikaPandaRobot
 from dqrobotics.solvers import DQ_QuadprogSolver
 from dqrobotics.utils import DQ_Geometry
 import time
@@ -56,24 +57,9 @@ try:
                    "Franka_joint5", "Franka_joint6", "Franka_joint7")
 
     #--------------------- Robot definition
-    franka_mdh = np.array([[0,    0,     0,         0,      0,       0,      0],
-                           [0.333, 0, 3.16e-1,       0, 3.84e-1,     0,      0],
-                           [0,     0,     0,   8.25e-2, -8.25e-2,    0, 8.8e-2],
-                           [0, -pi/2,   pi/2,     pi/2,    -pi/2,   pi/2, pi/2],
-                           [0,     0,     0,         0,        0,     0,    0]])
-    franka = DQ_SerialManipulatorMDH(franka_mdh)
-    robot_base = 1 + E_ * 0.5 * DQ([0, 0.0413, 0, 0])
-    franka.set_base_frame(robot_base)
-    franka.set_reference_frame(robot_base)
-    robot_effector = 1+E_*0.5*k_*1.07e-1
-    franka.set_effector(robot_effector)
-
+    franka = FrankaEmikaPandaRobot.kinematics()
     # Update the base of the robot from CoppeliaSim
-    new_base_robot = DQ([1])
-    for i in range(10):
-        new_base_robot = (franka.get_base_frame())*vi.get_object_pose("Franka")*(1+0.5*E_*(-0.07*k_))
-
-    franka.set_base_frame(new_base_robot)
+    new_base_robot = (franka.get_base_frame())*vi.get_object_pose("Franka")*(1+0.5*E_*(-0.07*k_))
     franka.set_reference_frame(new_base_robot)
 
     #------------------- Controller definition---------------------
@@ -88,15 +74,15 @@ try:
     safe_angle = 15*(pi/180)
     T = 0.005
     w = 0.2
-    alpha = 20*(pi/180)
+    amplitude = 20*(pi/180)
     t = 0
 
     #for i in range(iterations):
     for t in np.arange(0.0, iterations*T, T):
         #t = i*T
 
-        phi_t = alpha*sin(w*t)
-        phi_t_dot = alpha * w * cos(w * t)
+        phi_t = amplitude*sin(w*t)
+        phi_t_dot = amplitude * w * cos(w * t)
         r_dyn = cos(phi_t / 2) + i_ * sin(phi_t / 2)
         r_dyn_dot = (-sin(phi_t / 2) + i_ * cos(phi_t / 2)) * (phi_t_dot / 2)
 
@@ -135,7 +121,6 @@ try:
             print("-----RLINE_TO_LINE_ANGLE Constraint violated!!!!!!!!-------------------------")
         if not USE_RESIDUAL:
             residual_phi = 0
-        print("residual_phi: ", residual_phi)
         b = np.array([vfi_gain*ferror + residual_phi])
 
         vi.set_object_pose("x", x)
