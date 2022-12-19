@@ -27,7 +27,7 @@ from dqrobotics import *
 from dqrobotics.interfaces.vrep  import DQ_VrepInterface
 from dqrobotics.robot_control import ControlObjective
 from dqrobotics.robot_control import DQ_ClassicQPController
-from dqrobotics.robot_modeling import DQ_Kinematics, DQ_SerialManipulatorMDH
+from dqrobotics.robot_modeling import DQ_Kinematics
 from dqrobotics.robots import FrankaEmikaPandaRobot
 from dqrobotics.solvers import DQ_QuadprogSolver
 from dqrobotics.utils import DQ_Geometry
