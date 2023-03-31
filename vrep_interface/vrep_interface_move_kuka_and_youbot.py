@@ -1,12 +1,11 @@
 import time
 import numpy as np
 from math import pi, sin, cos
-import quadprog
 
 from dqrobotics import *
 from dqrobotics.utils import DQ_Geometry
-from dqrobotics.robot_control import DQ_TaskSpacePseudoInverseController, DQ_ClassicQPController, ControlObjective
-from dqrobotics.solvers import DQ_QuadraticProgrammingSolver, DQ_QuadprogSolver
+from dqrobotics.robot_control import DQ_PseudoinverseController, DQ_ClassicQPController, ControlObjective
+from dqrobotics.solvers import DQ_QuadprogSolver
 from dqrobotics.interfaces.vrep import DQ_VrepInterface
 from dqrobotics.interfaces.vrep.robots import LBR4pVrepRobot, YouBotVrepRobot
 
@@ -153,7 +152,7 @@ try:
     youbot = youbot_vreprobot.kinematics()
 
     # Initialize controllers
-    lbr4p_controller = DQ_TaskSpacePseudoInverseController(lbr4p)
+    lbr4p_controller = DQ_PseudoinverseController(lbr4p)
     lbr4p_controller.set_control_objective(ControlObjective.Pose)
     lbr4p_controller.set_gain(10.0)
 
