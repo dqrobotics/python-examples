@@ -34,7 +34,7 @@ def main() -> None:
     try:
         if not vi.connect("127.0.0.1", 19997, 100, 10):
             raise RuntimeError("Unable to connect to CoppeliaSim.")
-            
+
         vi.set_synchronous(True)
         vi.start_simulation()
         time.sleep(0.1)
@@ -52,7 +52,8 @@ def main() -> None:
         print("Elapsed time: ", t)
         print("Estimated height: ", y_est, "Measured height: ", y_sim)
 
-    except (Exception, KeyboardInterrupt):
+    except (Exception, KeyboardInterrupt) as e:
+        print(e)
         pass
 
     finally:
