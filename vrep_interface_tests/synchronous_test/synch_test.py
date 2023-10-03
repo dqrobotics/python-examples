@@ -18,8 +18,8 @@ Contributors:
 
 Instructions:
     Prerequisites:
-	    - dqrobotics
-	    - dqrobotics-interface-vrep
+    - dqrobotics
+    - dqrobotics-interface-vrep
 
 1) Open the CoppeliaSim scene synch_test.ttt
 2) Run and enjoy!
@@ -28,10 +28,9 @@ Instructions:
 from dqrobotics.interfaces.vrep import DQ_VrepInterface
 import time
 
-vi = DQ_VrepInterface()
-
 
 def main() -> None:
+    vi = DQ_VrepInterface()
     try:
         vi.connect("127.0.0.1", 19997, 100, 10)
         vi.set_synchronous(True)
@@ -65,3 +64,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
